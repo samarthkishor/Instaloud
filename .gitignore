@@ -1,0 +1,6 @@
+/.projectile
+/__pycache__
+/credentials.json
+/resources
+*.mp3
+*.txt
