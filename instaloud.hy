@@ -127,7 +127,7 @@
   (.export (concat-audio filename-list) (+ "audio/" title ".mp3") :format "mp3")
   (print "audio exported to file" (+ title ".mp3")))
 
-(defn main []
+(defmain [&rest args]
   (for [bookmark (get-bookmarks)]
     ;; (save-file bookmark)
     (bookmark->audio bookmark)))
