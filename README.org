@@ -1,0 +1,54 @@
+#+Title: Instaloud
+#+Author: Samarth Kishor
+
+Read your Instapaper saved articles aloud with Instaloud.
+
+* What is Instaloud?
+
+Instaloud is a small program written entirely in the [[https://github.com/hylang/hy][Hy Programming Language]].
+It downloads your saved bookmarks from Instapaper and converts them into mp3 files using Google’s Text-to-Speech API.
+
+* Installation
+
+Follow the instructions in the [[http://docs.hylang.org/en/stable/quickstart.html][Hy documentation]] to install Hy.
+
+All the code is in the file =instaloud.hy=.
+Download the dependencies specified in the =Pipfile= by running =pipenv install= (you may need to install =pipenv=) to get started.
+
+Instaloud needs some information before it can do anything—you'll need to get API keys/credentials from [[https://www.instapaper.com/api][Instapaper]] and [[https://cloud.google.com/text-to-speech/docs/][Google Cloud]].
+
+Create a file called =credentials.json= in the project root.
+
+Here's what the file should look like:
+
+#+BEGIN_SRC javascript
+  {
+    "client-id": "<instapaper api client id>",
+    "client-secret": "<instapaper api client secret>",
+    "username": "<instapaper username>",
+    "password": "<instapaper password>",
+    "google-auth-path": "<full path to Google Cloud authentiction credentials json file>"
+  }
+#+END_SRC
+
+After that, you should be good to go. You can run the program by making it executable with =chmod +x=, just like a Python program.
+
+* Built With
+
+This program was built with
+
+- [[https://github.com/hylang/hy][Hy]]
+- [[https://www.instapaper.com][Instapaper]]
+- [[https://cloud.google.com/text-to-speech/docs/][Google Cloud Text to Speech]]
+- [[https://github.com/mdorn/pyinstapaper][pyinstapaper]]
+- [[https://github.com/GoogleCloudPlatform/google-cloud-python/tree/master/texttospeech][Google Cloud Text-to-Speech API Python client]]
+- [[https://github.com/aaronsw/html2text][html2text]]
+- [[https://github.com/jiaaro/pydub][pydub]]
+
+* Contributing
+
+I’m new to Hy and Lisps in general so any tips to optimize the code, fix bugs, or improve this project are welcome!
+
+* License
+
+This project is licensed under the MIT License.
