@@ -2,5 +2,5 @@
 /__pycache__
 /credentials.json
 /resources
-*.mp3
-*.txt
+/audio/**
+/text/**
