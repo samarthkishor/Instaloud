@@ -19,7 +19,7 @@ Python and Hy are picky about virtual environments, so make sure it’s set up c
 
 Instaloud needs some information before it can do anything—you'll need to get API keys/credentials from [[https://www.instapaper.com/api][Instapaper]] and [[https://cloud.google.com/text-to-speech/docs/][Google Cloud]].
 
-Create a file called =credentials.json= in the project root.
+Create a directory called =resources= in the project root and then create a file called =credentials.json= in that directory.
 
 Here's what the file should look like:
 
@@ -32,8 +32,6 @@ Here's what the file should look like:
     "google-auth-path": "<full path to Google Cloud authentiction credentials json file>"
   }
 #+END_SRC
-
-Next, create a folder called =audio= and a folder called =text=. This is where the program stores mp3 files and plain text files, respectively.
 
 After that, you should be good to go. You can run the program by making it executable with =chmod +x=, just like a Python program.
 
