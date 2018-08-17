@@ -6,19 +6,68 @@
         json
         html2text
         os
-        re)
+        re
+        sys)
+
+;; Utility functions
+
+(defn slurp [path]
+  "Read a file from path"
+  (try
+    (with [f (open path "r")]
+      (.read f))
+    (except [IOError]
+      (.exit sys (+ "Error: file " path " does not exist")))))
+
+(defn spit [path contents]
+  "Write a file to path with contents"
+  (try
+    (with [f (open path "w")]
+      (.write f contents))
+    (except [IOError]
+      (.exit sys (+ "Error: file " path " does not exist")))))
+
+(defn dir-exists? [path]
+  "Check if a directory exists given its path"
+  (.isdir os.path path))
+
+(defn slugify [filename]
+  "Modified version of the function from django.utils.text.py.
+   Convert spaces to hyphens.
+   Remove characters that aren't alphanumerics, underscores, or hyphens.
+   Convert to lowercase.
+   Strip leading and trailing whitespace."
+  (setv value (-> (.sub re r"[^\w\s-]" "" filename) (.strip) (.lower)))
+  (.sub re r"[-\s]+" "-" value))
+
+;; Main functions
+
+(defn make-directories [directory-names]
+  "Make directories given a list of directory names"
+  (for [dirname directory-names]
+    (unless (dir-exists? (+ "./" dirname))
+      (.mkdir os dirname))))
+
+(defn get-credentials []
+  "Load the credentials.json file into a Python dictionary"
+  (.loads json (slurp "resources/credentials.json")))
+
+(defn google-cloud-authenticate []
+  "Set the $GOOGLE_APPLICATION_CREDENTIALS environment variable to authenticate"
+  (setv credentials (get-credentials))
+  (setv (get (. os environ) "GOOGLE_APPLICATION_CREDENTIALS")
+        (get credentials "google-auth-path")))
 
 (defn get-bookmarks []
   "Login to Instapaper and return a list of bookmarks"
-  (with [f (open "credentials.json")]
-    (setv credentials (.load json f))
-    (setv client-id     (get credentials "client-id")
-          client-secret (get credentials "client-secret")
-          username      (get credentials "username")
-          password      (get credentials "password"))
-    (setv insta (Instapaper client-id client-secret))
-    (.login insta username password)
-    (return (.get_bookmarks insta))))
+  (setv credentials (.loads json (slurp "resources/credentials.json")))
+  (setv client-id     (get credentials "client-id")
+        client-secret (get credentials "client-secret")
+        username      (get credentials "username")
+        password      (get credentials "password"))
+  (setv insta (Instapaper client-id client-secret))
+  (.login insta username password)
+  (.get_bookmarks insta))
 
 (defn bookmark->text [bookmark]
   "Take a bookmark (html) and format it to plain text"
@@ -33,15 +82,6 @@
                           (get "data")
                           (.decode "utf-8")
                           (.strip))))
-
-(defn slugify [filename]
-  "Modified version of the function from django.utils.text.py.
-   Convert spaces to hyphens.
-   Remove characters that aren't alphanumerics, underscores, or hyphens.
-   Convert to lowercase.
-   Strip leading and trailing whitespace."
-  (setv value (-> (.sub re r"[^\w\s-]" "" filename) (.strip) (.lower)))
-  (.sub re r"[-\s]+" "-" value))
 
 (defn format-title [bookmark]
   "Slugify the bookmark's title"
@@ -74,23 +114,16 @@
         (setv text (+ text word " "))))
   (do (.append new-list text) new-list))
 
-(defn save-file [bookmark]
+(defn save-bookmark-text [bookmark]
   "Save the text from a bookmark to a file. Split it into multiple files
    (i.e. `title1.txt`, `title2.txt`, etc.) if the text contains more than
    4000 characters."
   (for [[file-number file-content] (enumerate (split-text bookmark))]
-    (with [f (open
-               (+ "text/" (format-title bookmark) "-" (str (inc file-number)) ".txt")
-               "w")]
-      (.write f file-content))))
+    (spit (+ "text/" (format-title bookmark) "-" (str (inc file-number)) ".txt")
+          file-content)))
 
 (defn text->audio [text filename]
   "Convert a string into an mp3 file given the string and the file name"
-  ;; set the $GOOGLE_APPLICATION_CREDENTIALS environment variable to authenticate
-  (with [f (open "credentials.json" "r")]
-    (setv credentials (.load json f))
-    (setv (get (. os environ) "GOOGLE_APPLICATION_CREDENTIALS")
-          (get credentials "google-auth-path")))
   (setv client (.TextToSpeechClient texttospeech)
         input-text (.SynthesisInput (. texttospeech types) :text text)
         voice (.VoiceSelectionParams (. texttospeech types)
@@ -124,10 +157,15 @@
   (for [[file-number file-content] (enumerate text-list)]
     (setv filename (+ title "-" (str (inc file-number))))
     (text->audio file-content filename))
-  (.export (concat-audio filename-list) (+ "audio/" title ".mp3") :format "mp3")
+  (.export (concat-audio filename-list) (+ "out/" title ".mp3") :format "mp3")
   (print "audio exported to file" (+ title ".mp3")))
 
 (defmain [&rest args]
-  (for [bookmark (get-bookmarks)]
-    ;; (save-file bookmark)
+  (make-directories ["text" "audio" "out"])
+  (google-cloud-authenticate)
+  (setv bookmark-list (get-bookmarks))
+  ;; Don't run the program if there are no bookmarks
+  (when (empty? bookmark-list)
+    (.exit sys "Error: there are no saved bookmarks"))
+  (for [bookmark bookmark-list]
     (bookmark->audio bookmark)))
