@@ -9,6 +9,8 @@ hy = "*"
 google-cloud-texttospeech = "*"
 pydub = "*"
 pyinstapaper = "*"
+urllib3 = ">=1.24.2"
+requests = ">=2.20.0"
 
 [dev-packages]
 
