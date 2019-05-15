@@ -9,9 +9,10 @@
         re
         sys)
 
+;;
 ;; Utility functions
 
-(defn slurp [path]
+(defn read-file [path]
   "Read a file from path"
   (try
     (with [f (open path "r")]
@@ -19,7 +20,7 @@
     (except [IOError]
       (.exit sys (+ "Error: file " path " does not exist")))))
 
-(defn spit [path contents]
+(defn write-file [path contents]
   "Write a file to path with contents"
   (try
     (with [f (open path "w")]
@@ -50,7 +51,7 @@
 
 (defn get-credentials []
   "Load the credentials.json file into a Python dictionary"
-  (.loads json (slurp "resources/credentials.json")))
+  (.loads json (read-file "resources/credentials.json")))
 
 (defn google-cloud-authenticate []
   "Set the $GOOGLE_APPLICATION_CREDENTIALS environment variable to authenticate"
@@ -60,7 +61,7 @@
 
 (defn get-bookmarks []
   "Login to Instapaper and return a list of bookmarks"
-  (setv credentials (.loads json (slurp "resources/credentials.json")))
+  (setv credentials (.loads json (read-file "resources/credentials.json")))
   (setv client-id     (get credentials "client-id")
         client-secret (get credentials "client-secret")
         username      (get credentials "username")
@@ -119,7 +120,7 @@
    (i.e. `title1.txt`, `title2.txt`, etc.) if the text contains more than
    4000 characters."
   (for [[file-number file-content] (enumerate (split-text bookmark))]
-    (spit (+ "text/" (format-title bookmark) "-" (str (inc file-number)) ".txt")
+    (write-file (+ "text/" (format-title bookmark) "-" (str (inc file-number)) ".txt")
           file-content)))
 
 (defn text->audio [text filename]
